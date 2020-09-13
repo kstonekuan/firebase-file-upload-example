@@ -14,6 +14,15 @@ var config = {
 };
 admin.initializeApp(config);
 
+function isIntro(file) {
+    if (file.name) {
+        let nameParts = file.name.split("_");
+        console.log(nameParts);
+        return nameParts[0].valueOf() === "intro".valueOf();
+    }
+    return false;
+}
+
 async function getVoiceUrl() {
     // Create a root reference
     var bucket = admin.storage().bucket('pennapps-2020-58432.appspot.com');
@@ -22,7 +31,9 @@ async function getVoiceUrl() {
     await bucket.getFiles().then(([files]) => {
         console.log("list done");
         // console.log(files);
-        recording = files[Math.floor(Math.random() * files.length)].name;
+        introFiles = files.filter(isIntro);
+        introFiles.forEach(file => console.log(file.name));
+        recording = introFiles[Math.floor(Math.random() * introFiles.length)].name;
         console.log(recording);
         console.log('path found');
         // console.log(voiceUrl);
@@ -55,9 +66,12 @@ app.use(cors({ origin: true }));
 // build multiple CRUD interfaces:
 app.get('/', async (req, res) => {
     let fileName = await getVoiceUrl();
+    let fileSuffix = fileName.split("_")[1];
     let url = "https://firebasestorage.googleapis.com/v0/b/pennapps-2020-58432.appspot.com/o/" + fileName + "?alt=media"
     res.send({'url': url,
-            'file': fileName});
+            'file': fileName,
+            'suffix': fileSuffix
+        });
 });
 
 // Expose Express API as a single Cloud Function:
